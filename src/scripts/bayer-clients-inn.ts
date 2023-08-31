@@ -55,7 +55,7 @@ async function main() {
             }
             if (key == "Выгрузка из агрорегистра") {
                 value.forEach((element: string) => {
-                    let client, culture, status, region, area
+                    let client, culture, status, region, area, fullName
                     let stringElement = JSON.stringify(element)
                     let agRegStringData: string[] = stringElement.split(",\"")
                     agRegStringData.forEach(data => {
@@ -72,11 +72,15 @@ async function main() {
                         } else if (data.includes("Район")) {
                             area = data.split(':')[1].replace("\"", '')
                                 .replace("\"", '')
-                        }
+                        } else if (data.includes("ФИО")) {
+                            fullName = data.split(':')[1].replace("\"", '')
+                            .replace("\"", '')
+                    }
                     })
                     const prepareClientName = prepareAgRegNames(client?client:'')
                     let agReg: AgReg = {
-                        client,
+                        client:client? client: "",
+                        fullName: fullName? fullName: "",
                         region: region ? region : "",
                         area: area ? area : "",
                         culture,

@@ -15,7 +15,7 @@ export type SisLink = {
 }
 
 export type AgReg = {
-    client?: string,
+    client: string,
     fullName: string,
     region: string,
     area:string,
