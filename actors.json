@@ -1,0 +1,14 @@
+{
+  "RootActor": {
+    "mode": "threaded",
+    "clusterSize": 1
+  },
+  "TelegrafActor": {
+    "mode": "threaded",
+    "clusterSize": 1
+  },
+  "LogicActor": {
+    "mode": "threaded",
+    "clusterSize": 1
+  }
+}

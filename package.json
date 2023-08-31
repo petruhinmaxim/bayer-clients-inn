@@ -1,0 +1,24 @@
+{
+  "name": "bayer_clients_inn",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "get-inn-start": "cross-env NODE_OPTIONS=\"-r ts-node/register\" node src/scripts/bayer-clients-inn.ts",
+    "get-inn-debug": "cross-env NODE_OPTIONS=\"-r ts-node/register --inspect\" node src/scripts/bayer-clients-inn.ts",
+    "run-browser": "cross-env NODE_OPTIONS=\"-r ts-node/register --inspect\" node src/scripts/run-browser.ts"
+  },
+  "dependencies": {
+    "cross-env": "^7.0.3",
+    "node-xlsx": "^0",
+    "selenium-webdriver": "^4.8.0",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4",
+    "pino": "^8.7.0",
+    "pino-pretty": "^9.1.1"
+  },
+  "devDependencies": {
+    "@types/selenium-webdriver": "^4.1.16",
+    "node-flywaydb": "^3.0.7",
+    "selenium-webdriver": "^4.1.1"
+  }
+}
