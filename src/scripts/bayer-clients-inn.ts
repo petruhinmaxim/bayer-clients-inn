@@ -14,48 +14,12 @@ async function main() {
     const path = process.argv[2]
     const contents = fs.readFileSync(path).toString()
 
-    let data: DataModel = {
-        sisLink: [],
-        agReg: [],
-        ts: [],
-        psp: [],
-        price: []
-    }
-
+    let agRegs: AgReg[] = []
     JSON.parse(contents, function (key, value) {
-            if (key == "Сислинк") {
-                value.forEach((element: string) => {
-                    let distributor, inn, client, product, amount
-                    let stringElement = JSON.stringify(element)
-                    let sisLinkStringData: string[] = stringElement.split(",\"")
-                    sisLinkStringData.forEach(data => {
-                            if (data.includes("наименование дистрибьютора")) {
-                                const replacer = "\\"
-                                distributor = data.split(':')[1].replace(replacer, '').replace(replacer, '')
-                            } else if (data.includes("ИНН")) {
-                                inn = data.split(':')[1]
-                            } else if (data.includes("Название клиента")) {
-                                client = data.split(':')[1]
-                            } else if (data.includes("Наименование товара краткое")) {
-                                product = data.split(':')[1]
-                            } else if (data.includes("Количество, в ед. изм BayerCS\"")) {
-                                amount = data.split(':')[1]
-                            }
-                        }
-                    )
-                    let sisLink: SisLink = {
-                        distributor,
-                        inn,
-                        client,
-                        product,
-                        amount
-                    }
-                    data.sisLink.push(sisLink)
-                })
-            }
             if (key == "Выгрузка из агрорегистра") {
                 value.forEach((element: string) => {
-                    let client, culture, status, region, area, fullName
+                    let client, cultures, status, region, area, fullName
+                    let totalSquare: number = 0
                     let stringElement = JSON.stringify(element)
                     let agRegStringData: string[] = stringElement.split(",\"")
                     agRegStringData.forEach(data => {
@@ -63,7 +27,7 @@ async function main() {
                             const replacer = "\\\""
                             client = data.split(':')[1].replace(replacer, '').replace(replacer, '')
                         } else if (data.includes("Культуры")) {
-                            culture = data.split(':')[1]
+                            cultures = data.split(':')[1]
                         } else if (data.includes("Статус")) {
                             status = data.split(':')[1]
                         } else if (data.includes("Регион")) {
@@ -74,45 +38,33 @@ async function main() {
                                 .replace("\"", '')
                         } else if (data.includes("ФИО")) {
                             fullName = data.split(':')[1].replace("\"", '')
-                            .replace("\"", '')
-                    }
+                                .replace("\"", '')
+                        } else if (data.includes("Посевная площадь")) {
+                            totalSquare = Number(data.split(':')[1].replace("\"", '')
+                                .replace("\"", ''))
+                        }
                     })
-                    const prepareClientName = prepareAgRegNames(client?client:'')
+                    const prepareClientName = prepareAgRegNames(client ? client : '')
                     let agReg: AgReg = {
-                        client:client? client: "",
-                        fullName: fullName? fullName: "",
+                        client: client ? client : "",
+                        fullName: fullName ? fullName : "",
                         region: region ? region : "",
+                        totalSquare: totalSquare ? totalSquare : 0,
                         area: area ? area : "",
-                        culture,
+                        cultures,
                         prepareClientName,
                         status
                     }
-                    data.agReg.push(agReg)
-                })
-            }
-            if (key == "Выгрузка из TS") {
-                value.forEach((element: string) => {
-                    let inn, premium
-                    let stringElement = JSON.stringify(element)
-                    let agRegStringData: string[] = stringElement.split(",\"")
-                    agRegStringData.forEach(data => {
-                        if (data.includes("ИНН")) {
-                            inn = data.split(':')[1]
-                        } else if (data.includes("Премиальный")) {
-                            premium = data.split(':')[1]
-                        }
-                    })
-                    let ts: Ts = {
-                        inn,
-                        premium,
-                    }
-                    data.ts.push(ts)
+                    agRegs.push(agReg)
                 })
             }
             return value
         }
     )
-    await getINN(data.agReg)
+    agRegs = await getINN(agRegs)
+    agRegs = parseCultures(agRegs)
+    const JSONtoExcel = JSON.stringify(agRegs)
+    fs.writeFileSync("agReg5.json", JSONtoExcel)
 }
 
 function prepareAgRegNames(client: string): string {
@@ -161,6 +113,7 @@ function prepareAgRegNames(client: string): string {
         .replace("«", '')
         .replace("»", '')
         .trim()
+
     const clientNameMass = prepareClientName.split(" ")
     for (let j = 0; j < clientNameMass.length; j++) {
         if (clientNameMass[j].length > 3) {
@@ -169,6 +122,46 @@ function prepareAgRegNames(client: string): string {
         }
     }
     return prepareClientName
+}
+
+function parseCultures(agRegs: AgReg[]): AgReg[] {
+    const agRegsCulture: AgReg[] = []
+    for (let i = 0; i < agRegs.length; i++) {
+        const culturesMass = agRegs[i].cultures
+            ?.replace("\"", '')
+            .replace("\"", '')
+            .replace("Га", '')
+            .replace(" га", '')
+            .replace("га", '')
+            .replace("ГА", '')
+            .replace("}", '')
+            .split('),')
+        if (culturesMass) {
+            for (let culture of culturesMass) {
+                culture = culture.trim()
+                let singleCulture = culture.slice(0, culture.lastIndexOf(" ")).trim()
+                let square = culture.slice(culture.lastIndexOf(" "), culture.length)
+                    .replace("(", '')
+                    .replace(")", '')
+                    .trim().replace(",", ".")
+                const agRegCulture: AgReg = {
+                    client: agRegs[i].client,
+                    prepareClientName: agRegs[i].prepareClientName,
+                    fullName: agRegs[i].fullName,
+                    region: agRegs[i].region,
+                    area: agRegs[i].area,
+                    cultures: agRegs[i].cultures,
+                    totalSquare: agRegs[i].totalSquare,
+                    culture: singleCulture,
+                    square: Number(square),
+                    status: agRegs[i].status,
+                    inn: agRegs[i].inn
+                }
+                agRegsCulture.push(agRegCulture)
+            }
+        }
+    }
+    return agRegsCulture
 }
 
 main().catch(console.dir)
