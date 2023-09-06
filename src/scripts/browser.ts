@@ -18,7 +18,7 @@ export async function getINN(agReg: AgReg[]): Promise<AgReg[]> {
             .findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[3]/div[1]/input'))
 
 
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < agReg.length; i++) {
             // @ts-ignore вводим имя
             await nameInput.sendKeys(agReg[i].prepareClientName)
             await webDriver.sleep(2000)
@@ -33,11 +33,14 @@ export async function getINN(agReg: AgReg[]): Promise<AgReg[]> {
                     //ручная проверка
                 } else if (innCount > 2) {
                     try {
+                        // @ts-ignore
                         const region = agReg[i].region.split(" ")[0]
+                        // @ts-ignore
                         const area = agReg[i].area.split(" ")[0]
                         await inputRegion(webDriver, regionBottom, region, area)
                         //заполняем повторно имя и получаем данные
                         await clearNameField(webDriver, nameInput)
+                        // @ts-ignore
                         await nameInput.sendKeys(agReg[i].prepareClientName)
                         await webDriver.sleep(2000)
                         await webDriver.wait(until.elementLocated(By.xpath('//*[@id="ui-id-2"]')), 2000)
@@ -50,6 +53,7 @@ export async function getINN(agReg: AgReg[]): Promise<AgReg[]> {
                                 //проверка по имени todo  мб посимвольный ввод
                                 await clearRegionFields(webDriver, regionBottom)
                                 await clearNameField(webDriver, nameInput)
+                                // @ts-ignore
                                 const name = agReg[i].fullName.split(" ")[1]
                                 await nameInput.sendKeys(agReg[i].prepareClientName + " " + name)
                                 await webDriver.sleep(5000)
@@ -67,7 +71,6 @@ export async function getINN(agReg: AgReg[]): Promise<AgReg[]> {
             } catch (ignore) {
             }
             await clearNameField(webDriver, nameInput)
-            console.log(agReg[i])
         }
     } catch (e) {
         log.error(`Run Browser failed: ${e}`)

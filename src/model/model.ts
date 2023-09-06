@@ -7,7 +7,11 @@ export type DataModel = {
 }
 
 export type SisLink = {
-    distributor?: string,
+    distributorName: string
+    distributorDates: DistributorData[]
+}
+
+export type DistributorData = {
     inn?: string,
     client?: string,
     product?: string,
@@ -15,20 +19,62 @@ export type SisLink = {
 }
 
 export type AgReg = {
-    client: string,
-    prepareClientName: string,
-    fullName: string,
-    region: string,
-    area:string,
+    inn?: string,
+    client?: string,
+    prepareClientName?: string,
+    fullName?: string,
+    region?: string,
+    area?: string,
     cultures?: string,
-    totalSquare?:number,
+    totalSquare?: number,
     culture?: string,
     square?: number,
-    status?: string,
-    inn?: string
+    status?: string
 }
 
 export type Ts = {
     inn?: string,
     premium?: string
 }
+
+export type ProductPrice = {
+    product?: string,
+    price?: string
+}
+
+export type DistributorReport = {
+    distributorName: string,
+    totalPremiumSum?: number,
+    cultureReports: CultureReport[],
+    productReports: ProductReport[]
+}
+
+export type CultureReport = {
+    inn: string,
+    client: string,
+    status: string,
+    distributorName: string,
+    totalSquare?: number,
+    culture?: string,
+    square?: number,
+}
+
+export type ProductReport = {
+    inn: string,
+    client: string,
+    status: string,
+    distributorName: string,
+    product: string,
+    amount: number,
+    price?: number,
+    sum?: number,
+    premiumPercent?: number,
+    premiumSum?: number
+}
+
+/*
+Проходим по каждому дистрибьютеру из модели сислинка
+Проверяем по ТС
+Подтягиваем культуры по совпадению инн
+формируем массив отчетов
+ */

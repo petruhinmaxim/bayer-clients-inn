@@ -1,6 +1,6 @@
 import fs from "fs"
 import {AgReg, DataModel, SisLink, Ts} from "../model/model";
-import {getINN} from "./run-browser";
+import {getINN} from "./browser";
 
 /*
 1) Указываем путь до файла
@@ -61,10 +61,12 @@ async function main() {
             return value
         }
     )
+    console.log(agRegs)
+    console.log("__")
     agRegs = await getINN(agRegs)
     agRegs = parseCultures(agRegs)
     const JSONtoExcel = JSON.stringify(agRegs)
-    fs.writeFileSync("agReg5.json", JSONtoExcel)
+    fs.writeFileSync("agReg6.json", JSONtoExcel)
 }
 
 function prepareAgRegNames(client: string): string {

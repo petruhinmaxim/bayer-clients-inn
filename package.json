@@ -5,18 +5,22 @@
   "scripts": {
     "get-inn-start": "cross-env NODE_OPTIONS=\"-r ts-node/register\" node src/scripts/bayer-clients-inn.ts",
     "get-inn-debug": "cross-env NODE_OPTIONS=\"-r ts-node/register --inspect\" node src/scripts/bayer-clients-inn.ts",
-    "run-browser": "cross-env NODE_OPTIONS=\"-r ts-node/register --inspect\" node src/scripts/run-browser.ts"
+    "create-report": "cross-env NODE_OPTIONS=\"-r ts-node/register --inspect\" node src/scripts/create-report.ts",
+    "run-browser": "cross-env NODE_OPTIONS=\\\"-r ts-node/register --inspect\" node src/scripts/browser.ts"
   },
   "dependencies": {
+    "convert-excel-to-json": "1.7.0",
     "cross-env": "^7.0.3",
-    "node-xlsx": "^0",
+    "pino": "^8.7.0",
+    "pino-pretty": "^9.1.1",
     "selenium-webdriver": "^4.8.0",
     "ts-node": "^10.4.0",
     "typescript": "^4.5.4",
-    "pino": "^8.7.0",
-    "pino-pretty": "^9.1.1"
+    "xlsx": "^0.18.5",
+    "exceljs": "^1.15.0"
   },
   "devDependencies": {
+    "@types/convert-excel-to-json": "^1.7.1",
     "@types/selenium-webdriver": "^4.1.16",
     "node-flywaydb": "^3.0.7",
     "selenium-webdriver": "^4.1.1"
