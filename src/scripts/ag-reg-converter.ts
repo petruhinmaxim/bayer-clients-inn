@@ -1,4 +1,3 @@
-import fs from "fs"
 import {AgReg} from "../model/model"
 import {getINN} from "./selenium-worker"
 import xlsx from "xlsx"
@@ -6,11 +5,7 @@ import Excel, {Workbook, Worksheet} from "exceljs";
 
 async function main() {
     const pathAgReg = process.argv[2]
-
     let agRegs: AgReg[] = parseAgRegXlsx(pathAgReg)
-    for (let agreg of agRegs) {
-        console.log(agreg.prepareClientName)
-    }
     agRegs = await getINN(agRegs)
     agRegs = parseCultures(agRegs)
     await saveAgrRegsToXlsx(agRegs)
@@ -161,8 +156,6 @@ function parseCultures(agRegs: AgReg[]): AgReg[] {
 }
 
 async function saveAgrRegsToXlsx(agRegs: AgReg[]) {
-    let Excel = require('exceljs')
-    let fileName = "АгРегРучнойСборИнн"
     const workbook: Workbook = new Excel.Workbook()
     const worksheet: Worksheet = workbook.addWorksheet("АгРег")
 
@@ -181,7 +174,7 @@ async function saveAgrRegsToXlsx(agRegs: AgReg[]) {
     for (let data of agRegs) {
         worksheet.addRow(data).commit()
     }
-    await workbook.xlsx.writeFile(`${fileName} ${new Date().getDate()},${new Date().getMonth() + 1}.xlsx`)
+    await workbook.xlsx.writeFile(`"АгРегРучнойСборИнн" ${new Date().getDate()},${new Date().getMonth() + 1}.xlsx`)
 }
 
 main().catch(console.dir)
