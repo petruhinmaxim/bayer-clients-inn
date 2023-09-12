@@ -1,6 +1,7 @@
 import fs from "fs"
-import {AgReg, DataModel, SisLink, Ts} from "../model/model";
-import {getINN} from "./browser";
+import {AgReg} from "../model/model"
+import {getINN} from "./selenium-worker"
+import xlsx from "xlsx"
 
 /*
 1) Указываем путь до файла
@@ -11,65 +12,63 @@ import {getINN} from "./browser";
 */
 
 async function main() {
-    const path = process.argv[2]
-    const contents = fs.readFileSync(path).toString()
+    const pathAgReg = process.argv[2]
 
-    let agRegs: AgReg[] = []
-    JSON.parse(contents, function (key, value) {
-            if (key == "Выгрузка из агрорегистра") {
-                value.forEach((element: string) => {
-                    let client, cultures, status, region, area, fullName
-                    let totalSquare: number = 0
-                    let stringElement = JSON.stringify(element)
-                    let agRegStringData: string[] = stringElement.split(",\"")
-                    agRegStringData.forEach(data => {
-                        if (data.includes("Наименование")) {
-                            const replacer = "\\\""
-                            client = data.split(':')[1].replace(replacer, '').replace(replacer, '')
-                        } else if (data.includes("Культуры")) {
-                            cultures = data.split(':')[1]
-                        } else if (data.includes("Статус")) {
-                            status = data.split(':')[1]
-                        } else if (data.includes("Регион")) {
-                            region = data.split(':')[1].replace("\"", '')
-                                .replace("\"", '')
-                        } else if (data.includes("Район")) {
-                            area = data.split(':')[1].replace("\"", '')
-                                .replace("\"", '')
-                        } else if (data.includes("ФИО")) {
-                            fullName = data.split(':')[1].replace("\"", '')
-                                .replace("\"", '')
-                        } else if (data.includes("Посевная площадь")) {
-                            totalSquare = Number(data.split(':')[1].replace("\"", '')
-                                .replace("\"", ''))
-                        }
-                    })
-                    const prepareClientName = prepareAgRegNames(client ? client : '')
-                    let agReg: AgReg = {
-                        client: client ? client : "",
-                        fullName: fullName ? fullName : "",
-                        region: region ? region : "",
-                        totalSquare: totalSquare ? totalSquare : 0,
-                        area: area ? area : "",
-                        cultures,
-                        prepareClientName,
-                        status
-                    }
-                    agRegs.push(agReg)
-                })
-            }
-            return value
-        }
-    )
-    console.log(agRegs)
-    console.log("__")
+    let agRegs: AgReg[] = parseAgRegXlsx(pathAgReg)
     agRegs = await getINN(agRegs)
     agRegs = parseCultures(agRegs)
     const JSONtoExcel = JSON.stringify(agRegs)
     fs.writeFileSync("agReg6.json", JSONtoExcel)
 }
 
-function prepareAgRegNames(client: string): string {
+function parseAgRegXlsx(path: string): AgReg[] {
+    const file = xlsx.readFile(path)
+    let agRegs: AgReg[] = []
+    const sheets = file.SheetNames
+    let client: string, cultures: string, status: string, region: string, area: string, fullName: string
+    let totalSquare: number = 0
+    for (let i = 0; i < sheets.length; i++) {
+        const temp = xlsx.utils.sheet_to_json(
+            file.Sheets[file.SheetNames[i]])
+        temp.forEach((res) => {
+                if (typeof res == "object" && res != null) {
+                    for (let [key, value] of Object.entries(res)) {
+                        if (key == "Наименование") {
+                            client = value
+                        } else if (key.includes("Культуры")) {
+                            cultures = value
+                        } else if (key.includes("Статус")) {
+                            status = value
+                        } else if (key.includes("Регион")) {
+                            region = value
+                        } else if (key.includes("Район")) {
+                            area = value
+                        } else if (key.includes("ФИО")) {
+                            fullName = value
+                        } else if (key.includes("Посевная площадь")) {
+                            totalSquare = value
+                        }
+                    }
+                    if (client) {
+                        let agReg: AgReg = {
+                            client,
+                            fullName,
+                            region,
+                            totalSquare,
+                            area,
+                            cultures,
+                            prepareClientName: client ? prepareAgRegName(client) : undefined,
+                            status
+                        }
+                        agRegs.push(agReg)
+                    }
+                }
+            })
+    }
+    return agRegs
+}
+
+function prepareAgRegName(client: string): string {
     //удаляем абривиатуры и оставляем первое слово более 3-х букв
     let prepareClientName = client.replace("ИП", '')
         .replace("им. И.П.", '')

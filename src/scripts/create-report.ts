@@ -17,7 +17,7 @@ async function main() {
     const pathTsXlsx = process.argv[4]
     const pathPriceXlsx = process.argv[5]
     const sisLinks: SisLink[] = parseSisLinkXlsx(pathSisLinkXlsx)
-    const agRegs: AgReg[] = parseAgRegXlsx(pathAgRegXlsx)
+    const agRegs: AgReg[] = parseAgRegInnXlsx(pathAgRegXlsx)
     const tss: Ts[] = parseTsXlsx(pathTsXlsx)
     const prices: ProductPrice[] = parseProductPriceXls(pathPriceXlsx)
     const distributorReports: DistributorReport[] = createReports(sisLinks, agRegs, tss, prices)
@@ -79,7 +79,7 @@ function parseSisLinkXlsx(path: string): SisLink[] {
     return sisLinks
 }
 
-function parseAgRegXlsx(path: string): AgReg[] {
+function parseAgRegInnXlsx(path: string): AgReg[] {
     const file = xlsx.readFile(path)
     let agRegs: AgReg[] = []
     const sheets = file.SheetNames

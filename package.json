@@ -3,10 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "get-inn-start": "cross-env NODE_OPTIONS=\"-r ts-node/register\" node src/scripts/bayer-clients-inn.ts",
-    "get-inn-debug": "cross-env NODE_OPTIONS=\"-r ts-node/register --inspect\" node src/scripts/bayer-clients-inn.ts",
+    "get-inn-start": "cross-env NODE_OPTIONS=\"-r ts-node/register\" node src/scripts/ag-reg-converter.ts",
+    "get-inn-debug": "cross-env NODE_OPTIONS=\"-r ts-node/register --inspect\" node src/scripts/ag-reg-converter.ts",
     "create-report": "cross-env NODE_OPTIONS=\"-r ts-node/register --inspect\" node src/scripts/create-report.ts",
-    "run-browser": "cross-env NODE_OPTIONS=\\\"-r ts-node/register --inspect\" node src/scripts/browser.ts"
+    "run-browser": "cross-env NODE_OPTIONS=\"-r ts-node/register --inspect\" node src/scripts/browser.ts"
   },
   "dependencies": {
     "convert-excel-to-json": "1.7.0",
