@@ -11,13 +11,11 @@ export async function getINN(agReg: AgReg[]): Promise<AgReg[]> {
     try {
         await academyReg(webDriver)
         // ожидаем загрузки страницы
-        await webDriver.wait(until.elementLocated(By.xpath('//*[@id="edit-field-company-0-value"]')), 1000)
-
+        await webDriver.wait(until.elementLocated(By.xpath('//*[@id="edit-field-company-0-value"]')), 10000)
+        await webDriver.sleep(2000)
         const nameInput = await webDriver.findElement(By.xpath('//*[@id="edit-field-company-0-value"]'))
         const regionBottom = await webDriver
             .findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[3]/div[1]/input'))
-
-
         for (let i = 0; i < agReg.length; i++) {
             // @ts-ignore вводим имя
             await nameInput.sendKeys(agReg[i].prepareClientName)
@@ -50,7 +48,6 @@ export async function getINN(agReg: AgReg[]): Promise<AgReg[]> {
                             agReg[i].inn = await getInn(webDriver, elemInn)
                         } else {
                             try {
-                                //проверка по имени todo  мб посимвольный ввод
                                 await clearRegionFields(webDriver, regionBottom)
                                 await clearNameField(webDriver, nameInput)
                                 // @ts-ignore
@@ -62,13 +59,20 @@ export async function getINN(agReg: AgReg[]): Promise<AgReg[]> {
                                     agReg[i].inn = await getInn(webDriver, elemInn)
                                 }
                             }
-                            catch (ignore) {}
+                            catch (e) {
+                                console.log(e)
+                            }
                         }
-                    } catch (ignore) {
+                    } catch (e) {
+                        console.log(e)
                     }
-                    await clearRegionFields(webDriver, regionBottom)
+                    try {
+                        await clearRegionFields(webDriver, regionBottom)
+                    }
+                    catch (ignore) {}
                 }
-            } catch (ignore) {
+            } catch (e) {
+                console.log(e)
             }
             await clearNameField(webDriver, nameInput)
         }
@@ -87,7 +91,7 @@ export async function getINN(agReg: AgReg[]): Promise<AgReg[]> {
 async function academyReg(webDriver: WebDriver) {
     const startUrl = 'https://academy.cs.bayer.ru/user/register/client?destination=/feed'
     await webDriver.get(startUrl)
-    await webDriver.wait(until.elementLocated(By.xpath('//*[@id="edit-field-name-0-value"]')), 1000)
+    await webDriver.wait(until.elementLocated(By.xpath('//*[@id="edit-field-name-0-value"]')), 5000)
 
     const nameInput = await webDriver.findElement(By.xpath('//*[@id="edit-field-name-0-value"]'))
     await nameInput.sendKeys("Иванов")
@@ -150,11 +154,11 @@ async function inputRegion(webDriver: WebDriver,
 }
 
 async function clearRegionFields(webDriver: WebDriver, regionBottom: WebElement) {
-    await webDriver.findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[2]')).click()
-    await webDriver.sleep(1000)
-    await regionBottom.sendKeys(Key.chord(Key.COMMAND, "A"))
-    await regionBottom.sendKeys(Key.chord(Key.COMMAND, "A"))
-    await regionBottom.sendKeys(Key.BACK_SPACE)
-    await webDriver.sleep(1000)
-    await webDriver.findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[3]/div[2]/div[1]/span')).click()
+        await webDriver.findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[2]')).click()
+        await webDriver.sleep(1000)
+        await regionBottom.sendKeys(Key.chord(Key.COMMAND, "A"))
+        await regionBottom.sendKeys(Key.chord(Key.COMMAND, "A"))
+        await regionBottom.sendKeys(Key.BACK_SPACE)
+        await webDriver.sleep(1000)
+        await webDriver.findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[3]/div[2]/div[1]/span')).click()
 }

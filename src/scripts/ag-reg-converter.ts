@@ -2,23 +2,18 @@ import fs from "fs"
 import {AgReg} from "../model/model"
 import {getINN} from "./selenium-worker"
 import xlsx from "xlsx"
-
-/*
-1) Указываем путь до файла
-2) Загружаем файл и преобразуем в массив
-3) Открываем сайт для получения данных ИНН
-4) По названию каждого элемента массива получаем ИНН
-5) Формируем исходящие таблицы
-*/
+import Excel, {Workbook, Worksheet} from "exceljs";
 
 async function main() {
     const pathAgReg = process.argv[2]
 
     let agRegs: AgReg[] = parseAgRegXlsx(pathAgReg)
+    for (let agreg of agRegs) {
+        console.log(agreg.prepareClientName)
+    }
     agRegs = await getINN(agRegs)
     agRegs = parseCultures(agRegs)
-    const JSONtoExcel = JSON.stringify(agRegs)
-    fs.writeFileSync("agReg6.json", JSONtoExcel)
+    await saveAgrRegsToXlsx(agRegs)
 }
 
 function parseAgRegXlsx(path: string): AgReg[] {
@@ -31,39 +26,39 @@ function parseAgRegXlsx(path: string): AgReg[] {
         const temp = xlsx.utils.sheet_to_json(
             file.Sheets[file.SheetNames[i]])
         temp.forEach((res) => {
-                if (typeof res == "object" && res != null) {
-                    for (let [key, value] of Object.entries(res)) {
-                        if (key == "Наименование") {
-                            client = value
-                        } else if (key.includes("Культуры")) {
-                            cultures = value
-                        } else if (key.includes("Статус")) {
-                            status = value
-                        } else if (key.includes("Регион")) {
-                            region = value
-                        } else if (key.includes("Район")) {
-                            area = value
-                        } else if (key.includes("ФИО")) {
-                            fullName = value
-                        } else if (key.includes("Посевная площадь")) {
-                            totalSquare = value
-                        }
-                    }
-                    if (client) {
-                        let agReg: AgReg = {
-                            client,
-                            fullName,
-                            region,
-                            totalSquare,
-                            area,
-                            cultures,
-                            prepareClientName: client ? prepareAgRegName(client) : undefined,
-                            status
-                        }
-                        agRegs.push(agReg)
+            if (typeof res == "object" && res != null) {
+                for (let [key, value] of Object.entries(res)) {
+                    if (key == "Наименование") {
+                        client = value
+                    } else if (key.includes("Культуры")) {
+                        cultures = value
+                    } else if (key.includes("Статус")) {
+                        status = value
+                    } else if (key.includes("Регион")) {
+                        region = value
+                    } else if (key.includes("Район")) {
+                        area = value
+                    } else if (key.includes("ФИО")) {
+                        fullName = value
+                    } else if (key.includes("Посевная площадь")) {
+                        totalSquare = value
                     }
                 }
-            })
+                if (client) {
+                    let agReg: AgReg = {
+                        client: client ? client : "",
+                        fullName: fullName ? fullName : "",
+                        region: region ? region : "",
+                        totalSquare: totalSquare ? totalSquare : 0,
+                        area: area ? area : "",
+                        cultures,
+                        prepareClientName: client ? prepareAgRegName(client) : "",
+                        status
+                    }
+                    agRegs.push(agReg)
+                }
+            }
+        })
     }
     return agRegs
 }
@@ -165,4 +160,29 @@ function parseCultures(agRegs: AgReg[]): AgReg[] {
     return agRegsCulture
 }
 
+async function saveAgrRegsToXlsx(agRegs: AgReg[]) {
+    let Excel = require('exceljs')
+    let fileName = "АгРегРучнойСборИнн"
+    const workbook: Workbook = new Excel.Workbook()
+    const worksheet: Worksheet = workbook.addWorksheet("АгРег")
+
+    worksheet.columns = [
+        {header: 'inn', key: 'inn', width: 15},
+        {header: 'client', key: 'client', width: 25},
+        {header: 'fullName', key: 'fullName', width: 25},
+        {header: 'region', key: 'region', width: 25},
+        {header: 'area', key: 'area', width: 25},
+        {header: 'totalSquare', key: 'totalSquare', width: 20},
+        {header: 'cultures', key: 'cultures', width: 25},
+        {header: 'culture', key: 'culture', width: 25},
+        {header: 'square', key: 'square', width: 25},
+        {header: 'status', key: 'status', width: 15}
+    ]
+    for (let data of agRegs) {
+        worksheet.addRow(data).commit()
+    }
+    await workbook.xlsx.writeFile(`${fileName} ${new Date().getDate()},${new Date().getMonth() + 1}.xlsx`)
+}
+
 main().catch(console.dir)
+
