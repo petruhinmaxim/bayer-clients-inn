@@ -3,32 +3,27 @@ import {Browser, Builder, By, Key, until, WebDriver, WebElement} from "selenium-
 import {AgReg} from "../model/model";
 
 export async function getINN(agReg: AgReg[]): Promise<AgReg[]> {
-
     const log = consoleAndFileLogger('runBrowser')
-
     let webDriver = await new Builder().forBrowser(Browser.CHROME).build();
-
     try {
         await academyReg(webDriver)
-        // ожидаем загрузки страницы
         await webDriver.wait(until.elementLocated(By.xpath('//*[@id="edit-field-company-0-value"]')), 10000)
         await webDriver.sleep(2000)
         const nameInput = await webDriver.findElement(By.xpath('//*[@id="edit-field-company-0-value"]'))
         const regionBottom = await webDriver
             .findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[3]/div[1]/input'))
+
         for (let i = 0; i < agReg.length; i++) {
             // @ts-ignore вводим имя
             await nameInput.sendKeys(agReg[i].prepareClientName)
             await webDriver.sleep(2000)
             try {
-                await webDriver.wait(until.elementLocated(By.xpath('//*[@id="ui-id-2"]')), 2000)
+                await webDriver.wait(until.elementLocated(By.xpath('//*[@id="ui-id-2"]')), 5000)
                 const elemInn = await webDriver.findElement(By.xpath('//*[@id="ui-id-2"]'))
                 //проверяем число совпадений
                 let innCount = await checkInnCount(webDriver, elemInn)
                 if (innCount == 2) {
                     agReg[i].inn = await getInn(webDriver, elemInn)
-                } else if (innCount < 2) {
-                    //ручная проверка
                 } else if (innCount > 2) {
                     try {
                         // @ts-ignore
@@ -47,20 +42,14 @@ export async function getINN(agReg: AgReg[]): Promise<AgReg[]> {
                         if (innCount == 2) {
                             agReg[i].inn = await getInn(webDriver, elemInn)
                         } else {
-                            try {
-                                await clearRegionFields(webDriver, regionBottom)
-                                await clearNameField(webDriver, nameInput)
-                                // @ts-ignore
-                                const name = agReg[i].fullName.split(" ")[1]
-                                await nameInput.sendKeys(agReg[i].prepareClientName + " " + name)
-                                await webDriver.sleep(5000)
-                                innCount = await checkInnCount(webDriver, elemInn)
-                                if (innCount == 2) {
-                                    agReg[i].inn = await getInn(webDriver, elemInn)
-                                }
-                            }
-                            catch (e) {
-                                console.log(e)
+                            await clearRegionFields(webDriver, regionBottom)
+                            await clearNameField(webDriver, nameInput)
+                            // @ts-ignore
+                            const name = agReg[i].fullName.split(" ")[1]
+                            await nameInput.sendKeys(agReg[i].prepareClientName + " " + name)
+                            innCount = await checkInnCount(webDriver, elemInn)
+                            if (innCount == 2) {
+                                agReg[i].inn = await getInn(webDriver, elemInn)
                             }
                         }
                     } catch (e) {
@@ -68,8 +57,8 @@ export async function getINN(agReg: AgReg[]): Promise<AgReg[]> {
                     }
                     try {
                         await clearRegionFields(webDriver, regionBottom)
+                    } catch (ignore) {
                     }
-                    catch (ignore) {}
                 }
             } catch (e) {
                 console.log(e)
@@ -113,6 +102,7 @@ async function academyReg(webDriver: WebDriver) {
 }
 
 async function clearNameField(webDriver: WebDriver, nameInput: WebElement) {
+    await webDriver.sleep(2000)
     await nameInput.sendKeys(Key.chord(Key.COMMAND, "A"))
     await webDriver.sleep(1000)
     await nameInput.sendKeys(Key.chord(Key.COMMAND, "A"))
@@ -120,6 +110,7 @@ async function clearNameField(webDriver: WebDriver, nameInput: WebElement) {
 }
 
 async function checkInnCount(webdriver: WebDriver, elemInn: WebElement): Promise<number> {
+    await webdriver.sleep(2000)
     const text: string = await elemInn.getText()
     const stringMass: string[] = text.split('\n')
     return stringMass.length
@@ -154,11 +145,12 @@ async function inputRegion(webDriver: WebDriver,
 }
 
 async function clearRegionFields(webDriver: WebDriver, regionBottom: WebElement) {
-        await webDriver.findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[2]')).click()
-        await webDriver.sleep(1000)
-        await regionBottom.sendKeys(Key.chord(Key.COMMAND, "A"))
-        await regionBottom.sendKeys(Key.chord(Key.COMMAND, "A"))
-        await regionBottom.sendKeys(Key.BACK_SPACE)
-        await webDriver.sleep(1000)
-        await webDriver.findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[3]/div[2]/div[1]/span')).click()
+    await webDriver.sleep(2000)
+    await webDriver.findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[2]')).click()
+    await webDriver.sleep(2000)
+    await regionBottom.sendKeys(Key.chord(Key.COMMAND, "A"))
+    await regionBottom.sendKeys(Key.chord(Key.COMMAND, "A"))
+    await regionBottom.sendKeys(Key.BACK_SPACE)
+    await webDriver.sleep(1000)
+    await webDriver.findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[3]/div[2]/div[1]/span')).click()
 }

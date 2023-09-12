@@ -178,4 +178,3 @@ async function saveAgrRegsToXlsx(agRegs: AgReg[]) {
 }
 
 main().catch(console.dir)
-
