@@ -8,8 +8,7 @@ const config = {
         max: 10
     },
     telegram: {
-        mainToken: '6061892650:AAFnVYJcInN9M4APnhwukzEwIS1tXiv4jBY',
-        adminToken: '5119500805:AAEUeCO-vmp3l2BRjFxCMWyVxIA4oS_xszw'
+        mainToken: '6607964133:AAGk2spMV35Ww0eIbtp98IYVL_2GnboXmCk'
     }
 }
 

@@ -3,21 +3,23 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "telegram-start": "cross-env NODE_OPTIONS=\"-r ts-node/register\" node src/scripts/telegram.ts",
+    "telegram-start-debug": "cross-env NODE_OPTIONS=\"-r ts-node/register --inspect\" node src/scripts/telegram.ts",
     "get-inn-start": "cross-env NODE_OPTIONS=\"-r ts-node/register\" node src/scripts/ag-reg-converter.ts",
     "get-inn-debug": "cross-env NODE_OPTIONS=\"-r ts-node/register --inspect\" node src/scripts/ag-reg-converter.ts",
     "create-report": "cross-env NODE_OPTIONS=\"-r ts-node/register --inspect\" node src/scripts/create-report.ts",
     "run-browser": "cross-env NODE_OPTIONS=\"-r ts-node/register --inspect\" node src/scripts/browser.ts"
   },
   "dependencies": {
-    "convert-excel-to-json": "1.7.0",
+    "comedy": "^2.1.5",
     "cross-env": "^7.0.3",
-    "pino": "^8.7.0",
-    "pino-pretty": "^9.1.1",
     "selenium-webdriver": "^4.8.0",
+    "telegraf": "^4.5.2",
     "ts-node": "^10.4.0",
+    "typegram": "^5.2.0",
     "typescript": "^4.5.4",
     "xlsx": "^0.18.5",
-    "exceljs": "^1.15.0"
+    "nodejs-file-downloader": "^4.12.1"
   },
   "devDependencies": {
     "@types/convert-excel-to-json": "^1.7.1",
