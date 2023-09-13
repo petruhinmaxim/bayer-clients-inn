@@ -1,20 +1,12 @@
-export type Scene =
-    HelloGetInn | StartGetInn
-
-export type HelloGetInn = {
-    tpe: "HelloGetInn"
-}
-
-export type StartGetInn = {
-    tpe: "StartGetInn"
-}
 
 
-export function getTexts (scene: Scene):string {
-    switch (scene.tpe) {
-        case "HelloGetInn":
-            return "Привет. Я помогу тебе заполнить инн в выгрузке из АгРегистра. Для этого отправь мне файл с обязательными столбцами"
-        case "StartGetInn":
-            return "sf"
-    }
+export const texts = {
+    getInnHello: "Привет. Я помогу тебе заполнить инн в выгрузке из АгРегистра. Для этого отправь мне файл с обязательными столбцами",
+    getInnStart: "Файл получен. Приступаю к сбору ИНН. Ожидайте",
+    getInnFinish: "Сообщением выше отправлен файл выгрузки из Агрегистра. " +
+        "Подготовьте файл, заполнив недостающие ИНН и переходите к формированию отчетов, вызвав команду /createreports",
+    sendSisLink: "Отпраьте файл выгрузки Сислинк",
+    sendAgReg: "Отпраьте файл выгрузки Агрег с заполненными ИНН",
+    sendTs: "Отпраьте файл выгрузки ТС",
+    sendPrice: "Отпраьте файл с ценами"
 }

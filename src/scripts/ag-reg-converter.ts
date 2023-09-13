@@ -1,14 +1,14 @@
 import {AgReg} from "../model/model"
-import {getINN} from "./selenium-worker"
 import xlsx from "xlsx"
-import Excel, {Workbook, Worksheet} from "exceljs";
+import Excel, {Workbook, Worksheet} from "exceljs"
+import * as path from "path"
+import {getINN} from "./selenium-worker"
 
-async function main() {
-    const pathAgReg = process.argv[2]
+export async function agRegCreateFile(pathAgReg:string):Promise<string> {
     let agRegs: AgReg[] = parseAgRegXlsx(pathAgReg)
     agRegs = await getINN(agRegs)
     agRegs = parseCultures(agRegs)
-    await saveAgrRegsToXlsx(agRegs)
+    return await saveAgrRegsToXlsx(agRegs)
 }
 
 function parseAgRegXlsx(path: string): AgReg[] {
@@ -155,7 +155,7 @@ function parseCultures(agRegs: AgReg[]): AgReg[] {
     return agRegsCulture
 }
 
-async function saveAgrRegsToXlsx(agRegs: AgReg[]) {
+async function saveAgrRegsToXlsx(agRegs: AgReg[]):Promise<string> {
     const workbook: Workbook = new Excel.Workbook()
     const worksheet: Worksheet = workbook.addWorksheet("АгРег")
 
@@ -174,7 +174,7 @@ async function saveAgrRegsToXlsx(agRegs: AgReg[]) {
     for (let data of agRegs) {
         worksheet.addRow(data).commit()
     }
-    await workbook.xlsx.writeFile(`"АгРегРучнойСборИнн" ${new Date().getDate()},${new Date().getMonth() + 1}.xlsx`)
+    const fileName = path.join("files", `АгРегРучноеЗаполнениеИнн${new Date().getDate()},${new Date().getMonth() + 1}.xlsx`)
+    await workbook.xlsx.writeFile(fileName)
+    return fileName
 }
-
-main().catch(console.dir)

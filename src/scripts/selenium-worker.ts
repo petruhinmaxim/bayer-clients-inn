@@ -103,9 +103,9 @@ async function academyReg(webDriver: WebDriver) {
 
 async function clearNameField(webDriver: WebDriver, nameInput: WebElement) {
     await webDriver.sleep(2000)
+    await nameInput.click()
     await nameInput.sendKeys(Key.chord(Key.COMMAND, "A"))
     await webDriver.sleep(1000)
-    await nameInput.sendKeys(Key.chord(Key.COMMAND, "A"))
     await nameInput.sendKeys(Key.BACK_SPACE)
 }
 

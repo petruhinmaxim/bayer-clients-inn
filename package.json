@@ -19,7 +19,11 @@
     "typegram": "^5.2.0",
     "typescript": "^4.5.4",
     "xlsx": "^0.18.5",
-    "nodejs-file-downloader": "^4.12.1"
+    "nodejs-file-downloader": "^4.12.1",
+    "exceljs": "^4.3.0",
+    "pino": "^8.7.0",
+    "pino-pretty": "^9.1.1",
+    "path": "^0.12.7"
   },
   "devDependencies": {
     "@types/convert-excel-to-json": "^1.7.1",

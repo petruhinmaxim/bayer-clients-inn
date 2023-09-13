@@ -11,20 +11,17 @@ import {
 } from "../model/model"
 import {Workbook, Worksheet} from "exceljs"
 
-async function main() {
-    const pathSisLinkXlsx = process.argv[2]
-    const pathAgRegXlsx = process.argv[3]
-    const pathTsXlsx = process.argv[4]
-    const pathPriceXlsx = process.argv[5]
+export async function getReports (pathSisLinkXlsx:string,
+                                  pathAgRegXlsx:string,
+                                  pathTsXlsx:string,
+                                  pathPriceXlsx:string):Promise<string> {
     const sisLinks: SisLink[] = parseSisLinkXlsx(pathSisLinkXlsx)
     const agRegs: AgReg[] = parseAgRegInnXlsx(pathAgRegXlsx)
     const tss: Ts[] = parseTsXlsx(pathTsXlsx)
     const prices: ProductPrice[] = parseProductPriceXls(pathPriceXlsx)
     const distributorReports: DistributorReport[] = createReports(sisLinks, agRegs, tss, prices)
-    await convertAndSaveReportsToXls(distributorReports)
+    return await convertAndSaveXlsxReportsToZip(distributorReports)
 }
-
-main().catch(console.dir)
 
 function parseSisLinkXlsx(path: string): SisLink[] {
     const file = xlsx.readFile(path)
@@ -277,7 +274,7 @@ function createReports(sisLinks: SisLink[], agRegs: AgReg[],
     return distributorReports
 }
 
-async function convertAndSaveReportsToXls(distributorReports: DistributorReport[]) {
+async function convertAndSaveXlsxReportsToZip(distributorReports: DistributorReport[]):Promise<string> {
     let Excel = require('exceljs')
 
     for (let distributorReport of distributorReports) {
@@ -331,4 +328,6 @@ async function convertAndSaveReportsToXls(distributorReports: DistributorReport[
         }
         await workbook.xlsx.writeFile(`${fileName} ${new Date().getDate()},${new Date().getMonth() + 1}.xlsx`)
     }
+    //todo
+    return ""
 }
