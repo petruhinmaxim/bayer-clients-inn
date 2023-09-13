@@ -71,10 +71,3 @@ export type ProductReport = {
     premiumPercent?: number,
     premiumSum?: number
 }
-
-export type FilesForReports = {
-    price:string,
-    sisLink:string,
-    ts: string,
-    agReg:string
-}

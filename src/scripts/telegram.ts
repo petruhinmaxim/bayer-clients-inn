@@ -6,10 +6,9 @@ import fs from "fs"
 import {getReports} from "./create-report"
 import * as path from "path"
 import Downloader from "nodejs-file-downloader"
-import {FilesForReports} from "../model/model"
 
 async function main() {
-    const telegraf = new Telegraf(config.telegram.mainToken)
+    const telegraf = new Telegraf(config.telegram.mainToken, {handlerTimeout: 9000000})
 
     enum states {reboot, getInn, getSisLink, getTs, getAgRes, getPrice, createReport }
 
@@ -74,63 +73,65 @@ async function main() {
 
     // load files
     await telegraf.on('document', async (ctx) => {
-        const document = ctx.message.document
-        const file = await telegraf.telegram.getFile(document.file_id)
-        const fileUrl = `http://api.telegram.org/file/bot${config.telegram.mainToken}/${file.file_path}`
-        const downloader = new Downloader({url: fileUrl, directory: path.join("files")})
-        const {filePath} = await downloader.download()
-        if (filePath) {
-            switch (state) {
-                case states.getInn:
-                    try {
-                        await telegraf.telegram.sendMessage(chatId, texts.getInnStart)
-                        const fileName = await agRegCreateFile(filePath)
-                        await telegraf.telegram.sendDocument(
-                            chatId, {
-                                filename: fileName,
-                                source: fileName
-                            }
-                        )
-                        await telegraf.telegram.sendMessage(chatId, texts.getInnFinish)
-                    } catch (error) {
-                        await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
-                    }
-                    break
 
-                case states.getSisLink:
-                    try {
-                        sisLink = filePath
-                        await telegraf.telegram.sendMessage(chatId, texts.doneSisLink)
-                    } catch (error) {
-                        await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
-                    }
-                    break;
-                case states.getTs:
-                    try {
-                        ts = filePath
-                        await telegraf.telegram.sendMessage(chatId, texts.doneTs)
-                    } catch (error) {
-                        await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
-                    }
-                    break;
-                case states.getAgRes:
-                    try {
-                        agReg = filePath
-                        await telegraf.telegram.sendMessage(chatId, texts.doneAgReg)
-                    } catch (error) {
-                        await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
-                    }
-                    break;
-                case states.getPrice:
-                    try {
-                        price = filePath
-                        await telegraf.telegram.sendMessage(chatId, texts.donePrice)
-                    } catch (error) {
-                        await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
-                    }
-                    break;
+            const document = ctx.message.document
+            const file = await telegraf.telegram.getFile(document.file_id)
+            const fileUrl = `http://api.telegram.org/file/bot${config.telegram.mainToken}/${file.file_path}`
+            const downloader = new Downloader({url: fileUrl, directory: path.join("files")})
+            const {filePath} = await downloader.download()
+            if (filePath) {
+                switch (state) {
+                    case states.getInn:
+                        try {
+                            await telegraf.telegram.sendMessage(chatId, texts.getInnStart)
+                            const fileName = await agRegCreateFile(filePath)
+                            await telegraf.telegram.sendDocument(
+                                chatId, {
+                                    filename: fileName,
+                                    source: fileName
+                                }
+                            )
+                            await telegraf.telegram.sendMessage(chatId, texts.getInnFinish)
+                        } catch (error) {
+                            await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
+                        }
+                        break
+
+                    case states.getSisLink:
+                        try {
+                            sisLink = filePath
+                            await telegraf.telegram.sendMessage(chatId, texts.doneSisLink)
+                        } catch (error) {
+                            await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
+                        }
+                        break;
+                    case states.getTs:
+                        try {
+                            ts = filePath
+                            await telegraf.telegram.sendMessage(chatId, texts.doneTs)
+                        } catch (error) {
+                            await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
+                        }
+                        break;
+                    case states.getAgRes:
+                        try {
+                            agReg = filePath
+                            await telegraf.telegram.sendMessage(chatId, texts.doneAgReg)
+                        } catch (error) {
+                            await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
+                        }
+                        break;
+                    case states.getPrice:
+                        try {
+                            price = filePath
+                            await telegraf.telegram.sendMessage(chatId, texts.donePrice)
+                        } catch (error) {
+                            await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
+                        }
+                        break;
+                }
             }
-        }
+
     })
     await telegraf.launch(config.telegram.mainToken)
 }

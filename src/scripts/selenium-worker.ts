@@ -1,6 +1,7 @@
 import {consoleAndFileLogger} from "../util/Logger";
 import {Browser, Builder, By, Key, until, WebDriver, WebElement} from "selenium-webdriver";
 import {AgReg} from "../model/model";
+import {click} from "../util/webDriver-click";
 
 export async function getINN(agReg: AgReg[]): Promise<AgReg[]> {
     const log = consoleAndFileLogger('runBrowser')
@@ -80,22 +81,29 @@ export async function getINN(agReg: AgReg[]): Promise<AgReg[]> {
 async function academyReg(webDriver: WebDriver) {
     const startUrl = 'https://academy.cs.bayer.ru/user/register/client?destination=/feed'
     await webDriver.get(startUrl)
-    await webDriver.wait(until.elementLocated(By.xpath('//*[@id="edit-field-name-0-value"]')), 5000)
+    await webDriver.wait(until.elementLocated(By.xpath('//*[@id="edit-field-name-0-value"]')), 10000)
+    await webDriver.sleep(2000)
 
     const nameInput = await webDriver.findElement(By.xpath('//*[@id="edit-field-name-0-value"]'))
     await nameInput.sendKeys("Иванов")
     await nameInput.sendKeys(Key.ENTER)
+    await webDriver.sleep(1000)
 
     const phoneInput = await webDriver.findElement(By.xpath('//*[@id="edit-field-phone-0-value"]'))
+    await click(webDriver, By.xpath('//*[@id="edit-field-phone-0-value"]'))
     await phoneInput.sendKeys("9991232233")
+    await webDriver.sleep(1000)
 
     const emailInput = await webDriver.findElement(By.xpath('//*[@id="edit-mail"]'))
     await emailInput.sendKeys("ivanov@gmail.com")
+    await webDriver.sleep(1000)
 
     const passInput = await webDriver.findElement(By.xpath('//*[@id="edit-pass-pass1"]'))
     await passInput.sendKeys("1233")
+    await webDriver.sleep(1000)
     const passInput2 = await webDriver.findElement(By.xpath('//*[@id="edit-pass-pass2"]'))
     await passInput2.sendKeys("1233")
+    await webDriver.sleep(1000)
 
     const gotoInput = await webDriver.findElement(By.xpath('//*[@id="block-academy-bayer-content"]/div/div[3]/div[1]/a[2]\n'))
     await gotoInput.sendKeys(Key.ENTER)
@@ -103,7 +111,7 @@ async function academyReg(webDriver: WebDriver) {
 
 async function clearNameField(webDriver: WebDriver, nameInput: WebElement) {
     await webDriver.sleep(2000)
-    await nameInput.click()
+    await click(webDriver, By.xpath('//*[@id="edit-field-company-0-value"]'))
     await nameInput.sendKeys(Key.chord(Key.COMMAND, "A"))
     await webDriver.sleep(1000)
     await nameInput.sendKeys(Key.BACK_SPACE)
