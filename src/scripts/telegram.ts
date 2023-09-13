@@ -4,126 +4,135 @@ import {texts} from "../model/texts"
 import {agRegCreateFile} from "./ag-reg-converter"
 import fs from "fs"
 import {getReports} from "./create-report"
-import * as path from "path";
-import {text} from "telegraf/typings/button";
+import * as path from "path"
+import Downloader from "nodejs-file-downloader"
+import {FilesForReports} from "../model/model"
 
 async function main() {
     const telegraf = new Telegraf(config.telegram.mainToken)
 
-    await telegraf.on('text', async (ctx) => {
+    enum states {reboot, getInn, getSisLink, getTs, getAgRes, getPrice, createReport }
+
+    let state: states = states.getInn
+    let chatId: number
+    let agRegForGetInn: string, agReg: string, sisLink: string, ts: string, price: string
+
+    // state manager and inform user
+    telegraf.on('text', async (ctx) => {
         const user = ctx.from
+        chatId = user.id
         const text = ctx.message.text
-        if (text.includes("getinn")) {
-            await loadAgRegAndParseInn(telegraf, user.id)
+        if (text.includes("reboot")) {
+            state = states.reboot
+            let agRegForGetInn, agReg, sisLink, ts, price = undefined
+            try {
+                await fs.rmSync(path.join(`files`), {recursive: true, force: true})
+            } catch (ignore) {
+            }
+            await telegraf.telegram.sendMessage(chatId, texts.reboot)
+        } else if (text.includes("getinn")) {
+            state = states.getInn
+            await telegraf.telegram.sendMessage(chatId, texts.getInnHello)
+        } else if (text.includes("getsislink")) {
+            state = states.getSisLink
+            await telegraf.telegram.sendMessage(chatId, texts.sendSisLink)
+        } else if (text.includes("getts")) {
+            state = states.getTs
+            await telegraf.telegram.sendMessage(chatId, texts.sendTs)
+        } else if (text.includes("getagreg")) {
+            state = states.getAgRes
+            await telegraf.telegram.sendMessage(chatId, texts.sendAgReg)
+        } else if (text.includes("getprice")) {
+            state = states.getPrice
+            await telegraf.telegram.sendMessage(chatId, texts.sendPrice)
+        } else if (text.includes("createreport")) {
+            state = states.createReport
+            if (agReg && sisLink && ts && price) {
+                await telegraf.telegram.sendMessage(chatId, texts.createReport)
+                const reportsZipPath = await getReports(sisLink, agReg, ts, price)
+                await telegraf.telegram.sendDocument(
+                    chatId, {
+                        filename: "reports.zip",
+                        source: reportsZipPath
+                    }
+                )
+                try {
+                    await fs.rmSync(path.join(`files`), {recursive: true, force: true})
+                } catch (ignore) {
+                }
+            } else {
+                await telegraf.telegram.sendMessage(chatId, `Статус загрузки: \n` +
+                    `Сислинк - ${sisLink ? "загружен" : "отсуствует"} \n` +
+                    `Тс - ${ts ? "загружен" : "отсуствует"} \n` +
+                    `АгРег - ${agReg ? "загружен" : "отсуствует"} \n` +
+                    `Цены - ${price ? "загружен" : "отсуствует"} \n` +
+                    `Загрузите недостающие файлы
+                `)
+            }
         }
-        else if (text.includes("createreports")) {
-            await createReports(telegraf, user.id)
+    })
+
+    // load files
+    await telegraf.on('document', async (ctx) => {
+        const document = ctx.message.document
+        const file = await telegraf.telegram.getFile(document.file_id)
+        const fileUrl = `http://api.telegram.org/file/bot${config.telegram.mainToken}/${file.file_path}`
+        const downloader = new Downloader({url: fileUrl, directory: path.join("files")})
+        const {filePath} = await downloader.download()
+        if (filePath) {
+            switch (state) {
+                case states.getInn:
+                    try {
+                        await telegraf.telegram.sendMessage(chatId, texts.getInnStart)
+                        const fileName = await agRegCreateFile(filePath)
+                        await telegraf.telegram.sendDocument(
+                            chatId, {
+                                filename: fileName,
+                                source: fileName
+                            }
+                        )
+                        await telegraf.telegram.sendMessage(chatId, texts.getInnFinish)
+                    } catch (error) {
+                        await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
+                    }
+                    break
+
+                case states.getSisLink:
+                    try {
+                        sisLink = filePath
+                        await telegraf.telegram.sendMessage(chatId, texts.doneSisLink)
+                    } catch (error) {
+                        await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
+                    }
+                    break;
+                case states.getTs:
+                    try {
+                        ts = filePath
+                        await telegraf.telegram.sendMessage(chatId, texts.doneTs)
+                    } catch (error) {
+                        await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
+                    }
+                    break;
+                case states.getAgRes:
+                    try {
+                        agReg = filePath
+                        await telegraf.telegram.sendMessage(chatId, texts.doneAgReg)
+                    } catch (error) {
+                        await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
+                    }
+                    break;
+                case states.getPrice:
+                    try {
+                        price = filePath
+                        await telegraf.telegram.sendMessage(chatId, texts.donePrice)
+                    } catch (error) {
+                        await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
+                    }
+                    break;
+            }
         }
     })
     await telegraf.launch(config.telegram.mainToken)
 }
 
 main().catch(console.dir)
-
-async function loadAgRegAndParseInn(telegraf: Telegraf, chatId: number) {
-    await telegraf.telegram.sendMessage(chatId, texts.getInnHello)
-
-    await telegraf.on('document', async (ctx) => {
-        const document = ctx.message.document
-        const file = await telegraf.telegram.getFile(document.file_id)
-        const fileUrl = `http://api.telegram.org/file/bot${config.telegram.mainToken}/${file.file_path}`
-        const Downloader = require("nodejs-file-downloader")
-        const downloader = new Downloader({url: fileUrl, directory:path.join("files")})
-        try {
-            const {filePath, downloadStatus} = await downloader.download()
-            await telegraf.telegram.sendMessage(chatId, texts.getInnStart)
-            const fileName = await agRegCreateFile(filePath)
-            await telegraf.telegram.sendDocument(
-                chatId, {
-                    filename: fileName,
-                    source: fileName
-                }
-            )
-            await telegraf.telegram.sendMessage(chatId, texts.getInnFinish)
-            await fs.rmSync(filePath)
-            await fs.rmSync(fileName)
-        } catch (error) {
-            await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
-        }
-    })
-}
-
-async function createReports(telegraf: Telegraf, chatId: number) {
-    await telegraf.telegram.sendMessage(chatId, texts.sendSisLink)
-    let pathSisLinkXlsx:string = ""
-    await telegraf.on('document', async (ctx) => {
-        const document = ctx.message.document
-        const file = await telegraf.telegram.getFile(document.file_id)
-        const fileUrl = `http://api.telegram.org/file/bot${config.telegram.mainToken}/${file.file_path}`
-        const Downloader = require("nodejs-file-downloader")
-        const downloader = new Downloader({url: fileUrl})
-        try {
-            const {filePath, downloadStatus} = await downloader.download()
-            pathSisLinkXlsx = filePath
-        } catch (error) {
-            await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
-        }
-    })
-    if (pathSisLinkXlsx.length > 3) {
-        await telegraf.telegram.sendMessage(chatId, texts.sendAgReg)
-        let pathAgRegXlsx: string = ""
-        await telegraf.on('document', async (ctx) => {
-            const document = ctx.message.document
-            const file = await telegraf.telegram.getFile(document.file_id)
-            const fileUrl = `http://api.telegram.org/file/bot${config.telegram.mainToken}/${file.file_path}`
-            const Downloader = require("nodejs-file-downloader")
-            const downloader = new Downloader({url: fileUrl})
-            try {
-                const {filePath, downloadStatus} = await downloader.download()
-                pathAgRegXlsx = filePath
-            } catch (error) {
-                await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
-            }
-        })
-        await telegraf.telegram.sendMessage(chatId, texts.sendTs)
-        let pathTsXlsx: string = ""
-        await telegraf.on('document', async (ctx) => {
-            const document = ctx.message.document
-            const file = await telegraf.telegram.getFile(document.file_id)
-            const fileUrl = `http://api.telegram.org/file/bot${config.telegram.mainToken}/${file.file_path}`
-            const Downloader = require("nodejs-file-downloader")
-            const downloader = new Downloader({url: fileUrl})
-            try {
-                const {filePath, downloadStatus} = await downloader.download()
-                pathTsXlsx = filePath
-            } catch (error) {
-                await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
-            }
-        })
-
-        await telegraf.telegram.sendMessage(chatId, texts.sendPrice)
-        let pathPriceXlsx: string = ""
-        await telegraf.on('document', async (ctx) => {
-            const document = ctx.message.document
-            const file = await telegraf.telegram.getFile(document.file_id)
-            const fileUrl = `http://api.telegram.org/file/bot${config.telegram.mainToken}/${file.file_path}`
-            const Downloader = require("nodejs-file-downloader")
-            const downloader = new Downloader({url: fileUrl})
-            try {
-                const {filePath, downloadStatus} = await downloader.download()
-                pathPriceXlsx = filePath
-            } catch (error) {
-                await telegraf.telegram.sendMessage(chatId, `Download failed${error}`)
-            }
-        })
-
-        const reportsFileName = await getReports(pathSisLinkXlsx, pathAgRegXlsx, pathTsXlsx, pathPriceXlsx)
-        await telegraf.telegram.sendDocument(
-            chatId, {
-                filename: reportsFileName,
-                source: reportsFileName
-            }
-            //todo наверное нужно будет загрузить все 4 файла и только после этого проверить наличие всех и сформировать отчет
-        )
-    }
-}

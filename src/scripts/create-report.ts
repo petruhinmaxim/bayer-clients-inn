@@ -9,12 +9,15 @@ import {
     Ts,
     ProductPrice
 } from "../model/model"
-import {Workbook, Worksheet} from "exceljs"
+import Excel, {Workbook, Worksheet} from "exceljs"
+import * as path from "path"
+import fs from "fs"
+import JSZip from "jszip"
 
-export async function getReports (pathSisLinkXlsx:string,
-                                  pathAgRegXlsx:string,
-                                  pathTsXlsx:string,
-                                  pathPriceXlsx:string):Promise<string> {
+export async function getReports(pathSisLinkXlsx: string,
+                                 pathAgRegXlsx: string,
+                                 pathTsXlsx: string,
+                                 pathPriceXlsx: string): Promise<string> {
     const sisLinks: SisLink[] = parseSisLinkXlsx(pathSisLinkXlsx)
     const agRegs: AgReg[] = parseAgRegInnXlsx(pathAgRegXlsx)
     const tss: Ts[] = parseTsXlsx(pathTsXlsx)
@@ -226,7 +229,7 @@ function createReports(sisLinks: SisLink[], agRegs: AgReg[],
                     let price
                     let productReport: ProductReport
                     for (let productPrice of prices) {
-                        if (distributorDate.product == productPrice.product?.replace("*","").replace("*","")
+                        if (distributorDate.product == productPrice.product?.replace("*", "").replace("*", "")
                             && productPrice.price)
                             price = productPrice.price
                     }
@@ -274,8 +277,11 @@ function createReports(sisLinks: SisLink[], agRegs: AgReg[],
     return distributorReports
 }
 
-async function convertAndSaveXlsxReportsToZip(distributorReports: DistributorReport[]):Promise<string> {
-    let Excel = require('exceljs')
+async function convertAndSaveXlsxReportsToZip(distributorReports: DistributorReport[]): Promise<string> {
+    try {
+        await fs.mkdirSync(path.join(`files`, `reports`))
+    } catch (ignore) {
+    }
 
     for (let distributorReport of distributorReports) {
         let fileName = distributorReport.distributorName
@@ -307,7 +313,7 @@ async function convertAndSaveXlsxReportsToZip(distributorReports: DistributorRep
         for (let data of distributorReport.productReports) {
             worksheetProduct.addRow(data).commit()
         }
-        worksheetProduct.addRow({totalPremiumSum:distributorReport.totalPremiumSum}).commit()
+        worksheetProduct.addRow({totalPremiumSum: distributorReport.totalPremiumSum}).commit()
 
         worksheetCulture.columns = [
             {header: 'ИНН', key: 'inn', width: 15},
@@ -326,8 +332,23 @@ async function convertAndSaveXlsxReportsToZip(distributorReports: DistributorRep
         for (let data of distributorReport.cultureReports) {
             worksheetCulture.addRow(data).commit()
         }
-        await workbook.xlsx.writeFile(`${fileName} ${new Date().getDate()},${new Date().getMonth() + 1}.xlsx`)
+        await workbook.xlsx.writeFile(path.join(`files`, `reports`, `${fileName} ${new Date().getDate()},${new Date().getMonth() + 1}.xlsx`))
     }
-    //todo
-    return ""
+    const reportsPath = path.join(`files`, `reports`)
+    const reportsZipPath = path.join(reportsPath, 'reports.zip')
+    try {
+        const zip = new JSZip()
+        const files = fs.readdirSync(reportsPath)
+        files.forEach(file => {
+            const filePath = path.join(reportsPath, file)
+            zip.file(filePath, fs.readFileSync(filePath))
+        })
+        const context = await zip.generateAsync({type: "nodebuffer"})
+
+        await fs.writeFileSync(reportsZipPath, context)
+
+    } catch (e) {
+        console.log(e)
+    }
+    return reportsZipPath
 }

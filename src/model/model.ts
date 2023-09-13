@@ -72,9 +72,9 @@ export type ProductReport = {
     premiumSum?: number
 }
 
-/*
-Проходим по каждому дистрибьютеру из модели сислинка
-Проверяем по ТС
-Подтягиваем культуры по совпадению инн
-формируем массив отчетов
- */
+export type FilesForReports = {
+    price:string,
+    sisLink:string,
+    ts: string,
+    agReg:string
+}
