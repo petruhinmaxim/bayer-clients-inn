@@ -41,9 +41,9 @@ function parseSisLinkXlsx(path: string): SisLink[] {
         temp.forEach((res) => {
             if (typeof res == "object" && res != null) {
                 for (let [key, value] of Object.entries(res)) {
-                    if (key.includes("дистрибьютора")) {
+                    if (key.includes("наименование дистрибьютора")) {
                         name = value
-                    } else if (key.includes("клиента")) {
+                    } else if (key.includes("Название клиента")) {
                         client = value
                     } else if (key.includes("ИНН")) {
                         inn = value
