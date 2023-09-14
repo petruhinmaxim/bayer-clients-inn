@@ -1,21 +1,28 @@
-import {AgReg} from "../model/model"
+import {AgReg, AgRegInnDB} from "../model/model"
 import xlsx from "xlsx"
 import Excel, {Workbook, Worksheet} from "exceljs"
 import * as path from "path"
 import {getINN} from "./selenium-worker"
 
-export async function agRegCreateFile(pathAgReg:string):Promise<string> {
+export async function agRegCreateFile(pathAgReg: string): Promise<string> {
     let agRegs: AgReg[] = parseAgRegXlsx(pathAgReg)
+    const agRegDBPath = "src/db/agRegsDB.xlsx"
+    let agRegsDB: AgRegInnDB[] = parseAgRegDBXlsx(agRegDBPath)
+    getInnFromBd(agRegs, agRegsDB)
     agRegs = await getINN(agRegs)
+    await addInnToDBAndSave(agRegs)
     agRegs = parseCultures(agRegs)
-    return await saveAgrRegsToXlsx(agRegs)
+    const fileName = path.join("files", `АгРегРучноеЗаполнениеИнн${new Date().getDate()},${new Date().getMonth() + 1}.xlsx`)
+    await saveAgrRegsToXlsx(agRegs, fileName)
+    return fileName
 }
 
 function parseAgRegXlsx(path: string): AgReg[] {
     const file = xlsx.readFile(path)
     let agRegs: AgReg[] = []
     const sheets = file.SheetNames
-    let client: string, cultures: string, status: string, region: string, area: string, fullName: string
+    let client: string | undefined, cultures: string | undefined, status: string | undefined,
+        region: string | undefined, area: string | undefined, fullName: string | undefined
     let totalSquare: number = 0
     for (let i = 0; i < sheets.length; i++) {
         const temp = xlsx.utils.sheet_to_json(
@@ -51,6 +58,13 @@ function parseAgRegXlsx(path: string): AgReg[] {
                         status
                     }
                     agRegs.push(agReg)
+                    client = undefined
+                    cultures = undefined
+                    status = undefined
+                    region = undefined
+                    area = undefined
+                    area = undefined
+                    fullName = undefined
                 }
             }
         })
@@ -58,10 +72,86 @@ function parseAgRegXlsx(path: string): AgReg[] {
     return agRegs
 }
 
+function parseAgRegDBXlsx(path: string): AgRegInnDB[] {
+    const file = xlsx.readFile(path)
+    let agRegs: AgRegInnDB[] = []
+    const sheets = file.SheetNames
+    let client: string | undefined, inn: string | undefined
+    for (let i = 0; i < sheets.length; i++) {
+        const temp = xlsx.utils.sheet_to_json(
+            file.Sheets[file.SheetNames[i]])
+        temp.forEach((res) => {
+            if (typeof res == "object" && res != null) {
+                for (let [key, value] of Object.entries(res)) {
+                    if (key == "client") {
+                        client = value
+                    } else if (key.includes("inn")) {
+                        inn = value
+                    }
+                }
+                if (client) {
+                    let agReg: AgReg = {
+                        client: client ? client : "",
+                        inn
+                    }
+                    agRegs.push(agReg)
+                }
+                client = undefined
+                inn = undefined
+            }
+        })
+    }
+    return agRegs
+}
+
+function getInnFromBd(agRegs: AgReg[], agRegsDB: AgRegInnDB[]) {
+    agRegs.forEach((agReg) => {
+            for (let agRegDB of agRegsDB) {
+                if (agReg.client == agRegDB.client) {
+                    agReg.inn = agRegDB.inn
+                    break
+                }
+            }
+        }
+    )
+}
+
+export async function addInnToDBAndSave(agRegs: AgReg[]) {
+    const agRegDBPath = "src/db/agRegsDB.xlsx"
+    let agRegsDB: AgRegInnDB[] = parseAgRegDBXlsx(agRegDBPath)
+    const agRegsConvert: AgRegInnDB[] = []
+    agRegs.forEach((agReg) => {
+        let agRegConvert: AgRegInnDB = {
+            inn: agReg.inn,
+            client: agReg.client
+        }
+        agRegsConvert.push(agRegConvert)
+    })
+
+    agRegsConvert.forEach((agRegConvert) => {
+        if (agRegConvert.inn && !agRegsDB.includes(agRegConvert)) {
+            agRegsDB.push(agRegConvert)
+        }
+    })
+    const workbook: Workbook = new Excel.Workbook()
+    const worksheet: Worksheet = workbook.addWorksheet("АгРег")
+
+    worksheet.columns = [
+        {header: 'inn', key: 'inn', width: 15},
+        {header: 'client', key: 'client', width: 25}
+    ]
+    for (let data of agRegsDB) {
+        worksheet.addRow(data).commit()
+    }
+    await workbook.xlsx.writeFile(agRegDBPath)
+
+}
+
 function prepareAgRegName(client: string): string {
     //удаляем абривиатуры и оставляем первое слово более 3-х букв
     let prepareClientName = client.replace("ИП", '')
         .replace("им. И.П.", '')
+        .replace("К(Ф)Х", '')
         .replace("ЗАО", '')
         .replace("АО", '')
         .replace("ГЛАВА КРЕСТЬЯНСКОГО (ФЕРМЕРСКОГО) ХОЗЯЙСТВА - ИНДИВИДУАЛЬНЫЙ ПРЕДПРИНИМАТЕЛЬ ", '')
@@ -157,7 +247,7 @@ function parseCultures(agRegs: AgReg[]): AgReg[] {
     return agRegsCulture
 }
 
-async function saveAgrRegsToXlsx(agRegs: AgReg[]):Promise<string> {
+async function saveAgrRegsToXlsx(agRegs: AgReg[], path: string) {
     const workbook: Workbook = new Excel.Workbook()
     const worksheet: Worksheet = workbook.addWorksheet("АгРег")
 
@@ -176,7 +266,5 @@ async function saveAgrRegsToXlsx(agRegs: AgReg[]):Promise<string> {
     for (let data of agRegs) {
         worksheet.addRow(data).commit()
     }
-    const fileName = path.join("files", `АгРегРучноеЗаполнениеИнн${new Date().getDate()},${new Date().getMonth() + 1}.xlsx`)
-    await workbook.xlsx.writeFile(fileName)
-    return fileName
+    await workbook.xlsx.writeFile(path)
 }

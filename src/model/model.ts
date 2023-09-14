@@ -32,6 +32,11 @@ export type AgReg = {
     status?: string
 }
 
+export type AgRegInnDB = {
+    inn?: string,
+    client?: string
+}
+
 export type Ts = {
     inn?: string,
     premium?: string

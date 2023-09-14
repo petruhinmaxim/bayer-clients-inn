@@ -13,6 +13,7 @@ import Excel, {Workbook, Worksheet} from "exceljs"
 import * as path from "path"
 import fs from "fs"
 import JSZip from "jszip"
+import {addInnToDBAndSave} from "./ag-reg-converter";
 
 export async function getReports(pathSisLinkXlsx: string,
                                  pathAgRegXlsx: string,
@@ -20,6 +21,7 @@ export async function getReports(pathSisLinkXlsx: string,
                                  pathPriceXlsx: string): Promise<string> {
     const sisLinks: SisLink[] = parseSisLinkXlsx(pathSisLinkXlsx)
     const agRegs: AgReg[] = parseAgRegInnXlsx(pathAgRegXlsx)
+    await addInnToDBAndSave(agRegs)
     const tss: Ts[] = parseTsXlsx(pathTsXlsx)
     const prices: ProductPrice[] = parseProductPriceXls(pathPriceXlsx)
     const distributorReports: DistributorReport[] = createReports(sisLinks, agRegs, tss, prices)
@@ -86,12 +88,12 @@ function parseAgRegInnXlsx(path: string): AgReg[] {
     for (let i = 0; i < sheets.length; i++) {
         const temp = xlsx.utils.sheet_to_json(
             file.Sheets[file.SheetNames[i]])
-        let inn = ""
-        let client = ""
-        let totalSquare = 0
-        let culture = ""
-        let square = 0
-        let status = ""
+        let inn: string | undefined = ""
+        let client: string | undefined = ""
+        let totalSquare: number | undefined = 0
+        let culture: string | undefined = ""
+        let square: number | undefined = 0
+        let status: string | undefined = ""
         temp.forEach((res) => {
             if (typeof res == "object" && res != null) {
                 for (let [key, value] of Object.entries(res)) {
@@ -121,6 +123,12 @@ function parseAgRegInnXlsx(path: string): AgReg[] {
                     status
                 }
                 agRegs.push(agReg)
+                inn = undefined
+                client = undefined
+                totalSquare = undefined
+                culture = undefined
+                square = undefined
+                status = undefined
             }
         })
     }
