@@ -36,7 +36,7 @@ function parseSisLinkXlsx(path: string): SisLink[] {
         const temp = xlsx.utils.sheet_to_json(
             file.Sheets[file.SheetNames[i]])
         let name = ""
-        let inn = ""
+        let inn:number
         let client = ""
         let product = ""
         let amount = ""
@@ -48,7 +48,7 @@ function parseSisLinkXlsx(path: string): SisLink[] {
                     } else if (key.includes("Название клиента")) {
                         client = value
                     } else if (key.includes("ИНН")) {
-                        inn = value
+                        inn = Number(value)
                     } else if (key.includes("Наименование")) {
                         product = value
                     } else if (key.includes("BayerCS")) {
@@ -88,7 +88,7 @@ function parseAgRegInnXlsx(path: string): AgReg[] {
     for (let i = 0; i < sheets.length; i++) {
         const temp = xlsx.utils.sheet_to_json(
             file.Sheets[file.SheetNames[i]])
-        let inn: string | undefined = ""
+        let inn: number | undefined
         let client: string | undefined = ""
         let totalSquare: number | undefined = 0
         let culture: string | undefined = ""
@@ -142,13 +142,13 @@ function parseTsXlsx(path: string): Ts[] {
     for (let i = 0; i < sheets.length; i++) {
         const temp = xlsx.utils.sheet_to_json(
             file.Sheets[file.SheetNames[i]])
-        let inn = ""
+        let inn:number
         let premium = ""
         temp.forEach((res) => {
             if (typeof res == "object" && res != null) {
                 for (let [key, value] of Object.entries(res)) {
                     if (key.includes("ИНН")) {
-                        inn = value
+                        inn = Number(value)
                     } else if (key.includes("Премиальный")) {
                         premium = value
                     }

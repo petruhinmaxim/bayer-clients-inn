@@ -119,10 +119,9 @@ async function academyReg(webDriver: WebDriver) {
 
 async function clearNameField(webDriver: WebDriver) {
     await webDriver.sleep(2000)
-    await click(webDriver, By.xpath('//*[@id="edit-field-name-0-value"]'))
     await webDriver.sleep(1000)
     const nameInput = await webDriver.findElement(By.xpath('//*[@id="edit-field-company-0-value"]'))
-    await nameInput.sendKeys(Key.chord(Key.COMMAND, "A"))
+    await nameInput.click()
     await nameInput.sendKeys(Key.chord(Key.COMMAND, "A"))
     await nameInput.sendKeys(Key.chord(Key.CONTROL, "A"))
     await nameInput.sendKeys(Key.chord(Key.CONTROL, "A"))
@@ -137,10 +136,10 @@ async function checkInnCount(webdriver: WebDriver, elemInn: WebElement): Promise
     return stringMass.length
 }
 
-async function getInn(webdriver: WebDriver, elemInn: WebElement): Promise<string> {
+async function getInn(webdriver: WebDriver, elemInn: WebElement): Promise<number> {
     const text: string = await elemInn.getText()
     const stringMass: string[] = text.split('\n')
-    return stringMass[0].split("ИНН: ")[1]
+    return Number(stringMass[0].split("ИНН: ")[1])
 }
 
 async function inputRegion(webDriver: WebDriver,
@@ -163,12 +162,10 @@ async function inputRegion(webDriver: WebDriver,
 }
 
 async function clearRegionFields(webDriver: WebDriver) {
-    await webDriver.sleep(2000)
     await webDriver.findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[2]')).click()
     await webDriver.sleep(2000)
     const regionBottom = await webDriver.findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[3]/div[1]/input'))
-    await click(webDriver, By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[3]/div[1]/input'))
-    await webDriver.sleep(1000)
+    await regionBottom.click()
     await regionBottom.sendKeys(Key.chord(Key.COMMAND, "A"))
     await regionBottom.sendKeys(Key.chord(Key.COMMAND, "A"))
     await regionBottom.sendKeys(Key.chord(Key.CONTROL, "A"))
@@ -177,4 +174,5 @@ async function clearRegionFields(webDriver: WebDriver) {
     await regionBottom.sendKeys(Key.BACK_SPACE)
     await webDriver.sleep(1000)
     await click(webDriver, By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[3]/div[2]/div[1]/span'))
+    await click(webDriver, By.xpath('//*[@id="edit-field-position-0-value"]'))
 }

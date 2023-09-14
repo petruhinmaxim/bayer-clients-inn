@@ -76,7 +76,7 @@ function parseAgRegDBXlsx(path: string): AgRegInnDB[] {
     const file = xlsx.readFile(path)
     let agRegs: AgRegInnDB[] = []
     const sheets = file.SheetNames
-    let client: string | undefined, inn: string | undefined
+    let client: string | undefined, inn: number | undefined
     for (let i = 0; i < sheets.length; i++) {
         const temp = xlsx.utils.sheet_to_json(
             file.Sheets[file.SheetNames[i]])
@@ -121,16 +121,23 @@ export async function addInnToDBAndSave(agRegs: AgReg[]) {
     let agRegsDB: AgRegInnDB[] = parseAgRegDBXlsx(agRegDBPath)
     const agRegsConvert: AgRegInnDB[] = []
     agRegs.forEach((agReg) => {
-        let agRegConvert: AgRegInnDB = {
-            inn: agReg.inn,
-            client: agReg.client
+        if (agReg.inn) {
+            let agRegConvert: AgRegInnDB = {
+                inn: agReg.inn,
+                client: agReg.client
+            }
+            agRegsConvert.push(agRegConvert)
         }
-        agRegsConvert.push(agRegConvert)
+    })
+    const agREgInnDB = new Set
+    agRegsDB.forEach((data) => {
+        agREgInnDB.add(data.inn)
     })
 
     agRegsConvert.forEach((agRegConvert) => {
-        if (agRegConvert.inn && !agRegsDB.includes(agRegConvert)) {
+        if (!agREgInnDB.has(agRegConvert.inn)) {
             agRegsDB.push(agRegConvert)
+            agREgInnDB.add(agRegConvert.inn)
         }
     })
     const workbook: Workbook = new Excel.Workbook()

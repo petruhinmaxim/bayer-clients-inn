@@ -12,14 +12,14 @@ export type SisLink = {
 }
 
 export type DistributorData = {
-    inn?: string,
+    inn?: number,
     client?: string,
     product?: string,
     amount?: string
 }
 
 export type AgReg = {
-    inn?: string,
+    inn?: number,
     client?: string,
     prepareClientName?: string,
     fullName?: string,
@@ -33,12 +33,12 @@ export type AgReg = {
 }
 
 export type AgRegInnDB = {
-    inn?: string,
+    inn?: number,
     client?: string
 }
 
 export type Ts = {
-    inn?: string,
+    inn?: number,
     premium?: string
 }
 
@@ -55,7 +55,7 @@ export type DistributorReport = {
 }
 
 export type CultureReport = {
-    inn: string,
+    inn: number,
     client: string,
     status: string,
     distributorName: string,
@@ -65,7 +65,7 @@ export type CultureReport = {
 }
 
 export type ProductReport = {
-    inn: string,
+    inn: number,
     client: string,
     status: string,
     distributorName: string,
