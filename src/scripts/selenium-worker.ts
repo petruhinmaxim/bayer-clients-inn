@@ -15,10 +15,11 @@ export async function getINN(agReg: AgReg[]): Promise<AgReg[]> {
             .findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[3]/div[1]/input'))
 
         for (let i = 0; i < agReg.length; i++) {
-            // @ts-ignore вводим имя
-            await nameInput.sendKeys(agReg[i].prepareClientName)
-            await webDriver.sleep(2000)
             try {
+                // @ts-ignore вводим имя
+                await nameInput.sendKeys(agReg[i].prepareClientName)
+                await webDriver.sleep(2000)
+
                 await webDriver.wait(until.elementLocated(By.xpath('//*[@id="ui-id-2"]')), 5000)
                 const elemInn = await webDriver.findElement(By.xpath('//*[@id="ui-id-2"]'))
                 //проверяем число совпадений
@@ -33,7 +34,7 @@ export async function getINN(agReg: AgReg[]): Promise<AgReg[]> {
                         const area = agReg[i].area.split(" ")[0]
                         await inputRegion(webDriver, regionBottom, region, area)
                         //заполняем повторно имя и получаем данные
-                        await clearNameField(webDriver, nameInput)
+                        await clearNameField(webDriver)
                         // @ts-ignore
                         await nameInput.sendKeys(agReg[i].prepareClientName)
                         await webDriver.sleep(2000)
@@ -43,8 +44,8 @@ export async function getINN(agReg: AgReg[]): Promise<AgReg[]> {
                         if (innCount == 2) {
                             agReg[i].inn = await getInn(webDriver, elemInn)
                         } else {
-                            await clearRegionFields(webDriver, regionBottom)
-                            await clearNameField(webDriver, nameInput)
+                            await clearRegionFields(webDriver)
+                            await clearNameField(webDriver)
                             // @ts-ignore
                             const name = agReg[i].fullName.split(" ")[1]
                             await nameInput.sendKeys(agReg[i].prepareClientName + " " + name)
@@ -54,17 +55,22 @@ export async function getINN(agReg: AgReg[]): Promise<AgReg[]> {
                             }
                         }
                     } catch (e) {
-                        console.log(e)
+                        log.error(`${e}`)
                     }
                     try {
-                        await clearRegionFields(webDriver, regionBottom)
-                    } catch (ignore) {
+                        await clearRegionFields(webDriver)
+                    } catch (e) {
+                        log.error(`${e}`)
                     }
                 }
             } catch (e) {
-                console.log(e)
+                log.error(`${e}`)
             }
-            await clearNameField(webDriver, nameInput)
+            try {
+                await clearNameField(webDriver)
+            } catch (e) {
+                log.error(`${e}`)
+            }
         }
     } catch (e) {
         log.error(`Run Browser failed: ${e}`)
@@ -109,18 +115,13 @@ async function academyReg(webDriver: WebDriver) {
     await gotoInput.sendKeys(Key.ENTER)
 }
 
-async function clearNameField(webDriver: WebDriver, nameInput: WebElement) {
+async function clearNameField(webDriver: WebDriver) {
     await webDriver.sleep(2000)
-    await click(webDriver, By.xpath('//*[@id="edit-field-company-0-value"]'))
-    try {
-        await nameInput.sendKeys(Key.chord(Key.COMMAND, "A"))
-    }
-    catch (ignore) {}
-    try {
-        await nameInput.sendKeys(Key.chord(Key.CONTROL, "A"))
-    }
-    catch (ignore) {}
-
+    await click(webDriver, By.xpath('//*[@id="edit-field-name-0-value"]'))
+    await webDriver.sleep(1000)
+    const nameInput = await webDriver.findElement(By.xpath('//*[@id="edit-field-company-0-value"]'))
+    await nameInput.sendKeys(Key.chord(Key.COMMAND, "A"))
+    await nameInput.sendKeys(Key.chord(Key.CONTROL, "A"))
     await webDriver.sleep(1000)
     await nameInput.sendKeys(Key.BACK_SPACE)
 }
@@ -142,31 +143,32 @@ async function inputRegion(webDriver: WebDriver,
                            regionBottom: WebElement,
                            region: string,
                            area: string) {
-    try {
-        await webDriver.findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[2]')).click()
-        // @ts-ignore
-        await regionBottom.sendKeys(region)
-        await webDriver.sleep(1000)
-        await webDriver.findElement(By.css(`div[class="list__option"]`)).click()
-        await webDriver.sleep(1000)
-        await webDriver.findElement(By.xpath('//*[@id="edit-field-district-list-wrapper"]/div/div/div[2]')).click()
-        await webDriver.sleep(1000)
-        const areaBottom = await webDriver
-            .findElement(By.xpath('//*[@id="edit-field-district-list-wrapper"]/div/div/div[3]/div[1]/input'))
-        await areaBottom.sendKeys(area)
-        await webDriver.sleep(2000)
-        await webDriver.findElement(By.css(`div[class="list__option"]`)).click()
-    } catch (e) {
-    }
+    await click(webDriver, By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[2]'))
+    // @ts-ignore
+    await regionBottom.sendKeys(region)
+    await webDriver.sleep(1000)
+    await click(webDriver, By.css(`div[class="list__option"]`))
+    await webDriver.sleep(1000)
+    await webDriver.findElement(By.xpath('//*[@id="edit-field-district-list-wrapper"]/div/div/div[2]')).click()
+    await webDriver.sleep(1000)
+    const areaBottom = await webDriver
+        .findElement(By.xpath('//*[@id="edit-field-district-list-wrapper"]/div/div/div[3]/div[1]/input'))
+    await areaBottom.sendKeys(area)
+    await webDriver.sleep(2000)
+    await click(webDriver, By.css(`div[class="list__option"]`))
 }
 
-async function clearRegionFields(webDriver: WebDriver, regionBottom: WebElement) {
+async function clearRegionFields(webDriver: WebDriver) {
     await webDriver.sleep(2000)
     await webDriver.findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[2]')).click()
     await webDriver.sleep(2000)
+    const regionBottom = await webDriver.findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[3]/div[1]/input'))
+    await click(webDriver, By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[3]/div[1]/input'))
+    await webDriver.sleep(1000)
     await regionBottom.sendKeys(Key.chord(Key.COMMAND, "A"))
-    await regionBottom.sendKeys(Key.chord(Key.COMMAND, "A"))
+    await regionBottom.sendKeys(Key.chord(Key.CONTROL, "A"))
+    await webDriver.sleep(1000)
     await regionBottom.sendKeys(Key.BACK_SPACE)
     await webDriver.sleep(1000)
-    await webDriver.findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[3]/div[2]/div[1]/span')).click()
+    await click(webDriver, By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[3]/div[2]/div[1]/span'))
 }
