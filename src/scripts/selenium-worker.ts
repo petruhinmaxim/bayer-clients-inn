@@ -112,7 +112,15 @@ async function academyReg(webDriver: WebDriver) {
 async function clearNameField(webDriver: WebDriver, nameInput: WebElement) {
     await webDriver.sleep(2000)
     await click(webDriver, By.xpath('//*[@id="edit-field-company-0-value"]'))
-    await nameInput.sendKeys(Key.chord(Key.COMMAND, "A"))
+    try {
+        await nameInput.sendKeys(Key.chord(Key.COMMAND, "A"))
+    }
+    catch (ignore) {}
+    try {
+        await nameInput.sendKeys(Key.chord(Key.CONTROL, "A"))
+    }
+    catch (ignore) {}
+
     await webDriver.sleep(1000)
     await nameInput.sendKeys(Key.BACK_SPACE)
 }
