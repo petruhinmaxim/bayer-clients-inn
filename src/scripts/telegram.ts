@@ -14,7 +14,10 @@ async function main() {
 
     let state: states = states.getInn
     let chatId: number
-    let agReg: string, sisLink: string, ts: string, price: string
+    let agReg: string| undefined
+    let sisLink: string| undefined
+    let ts: string| undefined
+    let price: string| undefined
 
     // state manager and inform user
     telegraf.on('text', async (ctx) => {
@@ -23,7 +26,10 @@ async function main() {
         const text = ctx.message.text
         if (text.includes("reboot")) {
             state = states.reboot
-            let agRegForGetInn, agReg, sisLink, ts, price = undefined
+            agReg = undefined
+            sisLink = undefined
+            ts = undefined
+            price = undefined
             try {
                 await fs.rmSync(path.join(`files`), {recursive: true, force: true})
             } catch (e) {
