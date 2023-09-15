@@ -146,19 +146,25 @@ async function inputRegion(webDriver: WebDriver,
                            regionBottom: WebElement,
                            region: string,
                            area: string) {
-    await click(webDriver, By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[2]'))
-    // @ts-ignore
-    await regionBottom.sendKeys(region)
-    await webDriver.sleep(1000)
-    await click(webDriver, By.css(`div[class="list__option"]`))
-    await webDriver.sleep(1000)
-    await webDriver.findElement(By.xpath('//*[@id="edit-field-district-list-wrapper"]/div/div/div[2]')).click()
-    await webDriver.sleep(1000)
-    const areaBottom = await webDriver
-        .findElement(By.xpath('//*[@id="edit-field-district-list-wrapper"]/div/div/div[3]/div[1]/input'))
-    await areaBottom.sendKeys(area)
-    await webDriver.sleep(2000)
-    await click(webDriver, By.css(`div[class="list__option"]`))
+    try {
+        await click(webDriver, By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[2]'))
+        // @ts-ignore
+        await regionBottom.sendKeys(region)
+        await webDriver.sleep(1000)
+        await click(webDriver, By.css(`div[class="list__option"]`))
+        await webDriver.sleep(1000)
+        await webDriver.findElement(By.xpath('//*[@id="edit-field-district-list-wrapper"]/div/div/div[2]')).click()
+        await webDriver.sleep(1000)
+        const areaBottom = await webDriver
+            .findElement(By.xpath('//*[@id="edit-field-district-list-wrapper"]/div/div/div[3]/div[1]/input'))
+        await areaBottom.sendKeys(area)
+        await webDriver.sleep(2000)
+        await click(webDriver, By.css(`div[class="list__option"]`))
+    }
+    catch (e){
+        console.error(e)
+        await clearRegionFields(webDriver)
+    }
 }
 
 async function clearRegionFields(webDriver: WebDriver) {
