@@ -163,7 +163,7 @@ async function inputRegion(webDriver: WebDriver,
 
 async function clearRegionFields(webDriver: WebDriver) {
     await webDriver.findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[2]')).click()
-    await webDriver.sleep(2000)
+    await webDriver.sleep(3000)
     const regionBottom = await webDriver.findElement(By.xpath('//*[@id="edit-field-region-list-wrapper"]/div/div/div[3]/div[1]/input'))
     await regionBottom.click()
     await regionBottom.sendKeys(Key.chord(Key.COMMAND, "A"))
