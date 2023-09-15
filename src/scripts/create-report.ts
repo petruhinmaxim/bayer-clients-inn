@@ -340,7 +340,10 @@ async function convertAndSaveXlsxReportsToZip(distributorReports: DistributorRep
         for (let data of distributorReport.cultureReports) {
             worksheetCulture.addRow(data).commit()
         }
-        await workbook.xlsx.writeFile(path.join(`files`, `reports`, `${fileName} ${new Date().getDate()},${new Date().getMonth() + 1}.xlsx`))
+        const name = path.join(`files`, `reports`, `${fileName} ${new Date().getDate()},${new Date().getMonth() + 1}.xlsx`)
+            .replace("\"","")
+            .replace("\"","")
+        await workbook.xlsx.writeFile(name)
     }
     const reportsPath = path.join(`files`, `reports`)
     const reportsZipPath = path.join(reportsPath, 'reports.zip')
