@@ -14,7 +14,7 @@ async function main() {
 
     let state: states = states.getInn
     let chatId: number
-    let agRegForGetInn: string, agReg: string, sisLink: string, ts: string, price: string
+    let agReg: string, sisLink: string, ts: string, price: string
 
     // state manager and inform user
     telegraf.on('text', async (ctx) => {
@@ -26,7 +26,8 @@ async function main() {
             let agRegForGetInn, agReg, sisLink, ts, price = undefined
             try {
                 await fs.rmSync(path.join(`files`), {recursive: true, force: true})
-            } catch (ignore) {
+            } catch (e) {
+                console.error(e)
             }
             await telegraf.telegram.sendMessage(chatId, texts.reboot)
         } else if (text.includes("getinn")) {
