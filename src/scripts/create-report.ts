@@ -343,6 +343,10 @@ async function convertAndSaveXlsxReportsToZip(distributorReports: DistributorRep
         const name = path.join(`files`, `reports`, `${fileName} ${new Date().getDate()},${new Date().getMonth() + 1}.xlsx`)
             .replace("\"","")
             .replace("\"","")
+            .replace("\"","")
+            .replace("\"","")
+            .replace("\"","")
+            .replace("\"","")
         await workbook.xlsx.writeFile(name)
     }
     const reportsPath = path.join(`files`, `reports`)
