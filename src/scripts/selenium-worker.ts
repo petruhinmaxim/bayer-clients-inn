@@ -162,7 +162,6 @@ async function inputRegion(webDriver: WebDriver,
         await click(webDriver, By.css(`div[class="list__option"]`))
     }
     catch (e){
-        console.error(e)
         await clearRegionFields(webDriver)
     }
 }
