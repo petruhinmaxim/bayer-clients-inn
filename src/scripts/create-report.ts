@@ -36,7 +36,7 @@ function parseSisLinkXlsx(path: string): SisLink[] {
         const temp = xlsx.utils.sheet_to_json(
             file.Sheets[file.SheetNames[i]])
         let name = ""
-        let inn:number
+        let inn: number
         let client = ""
         let product = ""
         let amount = ""
@@ -49,7 +49,7 @@ function parseSisLinkXlsx(path: string): SisLink[] {
                         client = value
                     } else if (key.includes("ИНН")) {
                         inn = Number(value)
-                    } else if (key.includes("Наименование")) {
+                    } else if (key.includes("Наименование товара краткое")) {
                         product = value
                     } else if (key.includes("BayerCS")) {
                         amount = value
@@ -142,7 +142,7 @@ function parseTsXlsx(path: string): Ts[] {
     for (let i = 0; i < sheets.length; i++) {
         const temp = xlsx.utils.sheet_to_json(
             file.Sheets[file.SheetNames[i]])
-        let inn:number
+        let inn: number
         let premium = ""
         temp.forEach((res) => {
             if (typeof res == "object" && res != null) {
@@ -341,12 +341,12 @@ async function convertAndSaveXlsxReportsToZip(distributorReports: DistributorRep
             worksheetCulture.addRow(data).commit()
         }
         const name = path.join(`files`, `reports`, `${fileName} ${new Date().getDate()},${new Date().getMonth() + 1}.xlsx`)
-            .replace("\"","")
-            .replace("\"","")
-            .replace("\"","")
-            .replace("\"","")
-            .replace("\"","")
-            .replace("\"","")
+            .replace("\"", "")
+            .replace("\"", "")
+            .replace("\"", "")
+            .replace("\"", "")
+            .replace("\"", "")
+            .replace("\"", "")
         await workbook.xlsx.writeFile(name)
     }
     const reportsPath = path.join(`files`, `reports`)
